@@ -139,7 +139,6 @@ a {
   width: 100%;
 }
 
-/* Header */
 .site-header {
   --hdr-logo: #ffffff;
   --hdr-accent: #ffffff;
@@ -311,7 +310,6 @@ body.auth-page .nav-cta::before {
   transition: all 0.3s;
 }
 
-/* Hero */
 .hero {
   position: relative;
   min-height: 92vh;
@@ -385,7 +383,6 @@ body.auth-page .nav-cta::before {
   transform: scale(1.03);
 }
 
-/* Liquid glass */
 .liquid-glass {
   background: rgba(255, 255, 255, 0.01);
   background-blend-mode: luminosity;
@@ -413,7 +410,6 @@ body.auth-page .nav-cta::before {
   pointer-events: none;
 }
 
-/* Fade rise */
 @keyframes fade-rise {
   from {
     opacity: 0;
@@ -437,7 +433,6 @@ body.auth-page .nav-cta::before {
   animation: fade-rise 0.8s ease-out 0.4s both;
 }
 
-/* Intro */
 .intro {
   position: fixed;
   inset: 0;
@@ -484,7 +479,6 @@ body.auth-page .nav-cta::before {
   pointer-events: none;
 }
 
-/* Sections */
 .section {
   padding: 90px 0;
 }
@@ -520,7 +514,6 @@ body.auth-page .nav-cta::before {
   font-size: 1.05rem;
 }
 
-/* Method */
 .method {
   background: var(--bg);
 }
@@ -565,7 +558,6 @@ body.auth-page .nav-cta::before {
   color: var(--muted);
 }
 
-/* Courses */
 .courses {
   background: var(--bg-soft);
 }
@@ -654,7 +646,6 @@ body.auth-page .nav-cta::before {
   font-weight: 700;
 }
 
-/* Testimonials */
 .testimonials {
   background: var(--bg);
 }
@@ -718,7 +709,6 @@ body.auth-page .nav-cta::before {
   letter-spacing: 2px;
 }
 
-/* CTA */
 .cta {
   background: linear-gradient(135deg, var(--primary), #186a9f);
   padding: 90px 0;
@@ -749,7 +739,6 @@ body.auth-page .nav-cta::before {
   flex-wrap: wrap;
 }
 
-/* Footer */
 .site-footer {
   background: var(--dark);
   padding: 60px 0 0;
@@ -805,7 +794,6 @@ body.auth-page .nav-cta::before {
   text-align: center;
 }
 
-/* ============ Auth page ============ */
 .auth-page {
   background: var(--bg-soft);
 }
@@ -1090,7 +1078,6 @@ body.auth-page .nav-cta::before {
   margin-bottom: 28px;
 }
 
-/* Student area */
 [hidden] {
   display: none !important;
 }
@@ -1226,7 +1213,6 @@ body.auth-page .nav-cta::before {
   font-size: 0.95rem;
 }
 
-/* Responsive */
 @media (max-width: 1024px) {
   .method-grid {
     grid-template-columns: repeat(2, 1fr);

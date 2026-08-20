@@ -1,31 +1,11 @@
-// ============================================================
-//  Simple English — dissuasor de inspeção
-// ============================================================
-//  IMPORTANTE, PARA NÃO SE ILUDIR: isto NÃO é segurança.
-//  É um obstáculo para o visitante curioso, e nada além disso.
-//  Quem quiser ler o código consegue, sempre — desligando o
-//  JavaScript, abrindo o DevTools antes da página carregar,
-//  bloqueando este arquivo na aba Network, usando um proxy ou
-//  simplesmente baixando o site com `curl`. Nenhuma linha aqui
-//  impede isso, porque o DevTools é do navegador, não da página.
-//
-//  A segurança real dos dados está nas regras do Firestore
-//  (arquivo firestore.rules): mesmo com todo o código em mãos,
-//  ninguém lê matrículas nem altera o perfil de outro aluno.
-//
-//  MODO DEV (para você): abra qualquer página com ?dev=SIMPLEENGLISH2026
-//  na URL, por exemplo  index.html?dev=SIMPLEENGLISH2026
-//  Isso desliga o dissuasor neste navegador em definitivo (fica
-//  guardado no localStorage). Para religar: ?dev=off
-//  Como este arquivo é público, essa senha é visível para quem
-//  ler o código — é uma conveniência sua, não um controle de acesso.
-// ============================================================
+// Dissuasor de inspeção — isto NÃO é segurança; a segurança real está
+// nas regras do Firestore. Para desligar neste navegador, abra qualquer
+// página com ?dev=SIMPLEENGLISH2026 na URL (religue com ?dev=off).
 
 (function () {
   var CHAVE = "se_modo_dev";
   var SENHA = "SIMPLEENGLISH2026";
 
-  // ---- modo dev pela URL ----
   var params = new URLSearchParams(window.location.search);
   var dev = params.get("dev");
   if (dev === SENHA) {
@@ -37,7 +17,6 @@
   }
   if (localStorage.getItem(CHAVE) === "1") return;
 
-  // ---- atalhos de inspeção ----
   document.addEventListener(
     "keydown",
     function (e) {
@@ -55,7 +34,6 @@
     true
   );
 
-  // ---- clique direito ----
   document.addEventListener(
     "contextmenu",
     function (e) {
@@ -65,10 +43,6 @@
     true
   );
 
-  // ---- aviso quando o painel parece aberto (encaixado na janela) ----
-  // Heurística por diferença de tamanho: não detecta DevTools em janela
-  // separada, e pode dar falso positivo com barras laterais ou zoom.
-  // Por isso o aviso é fechável e nunca bloqueia o uso do site.
   var avisando = false;
 
   function mostrarAviso() {

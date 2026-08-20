@@ -1,8 +1,3 @@
-// ============================================================
-//  Área do aluno — cadastro, login e avaliações via Firebase
-//  Auth: Firebase Authentication (e-mail/senha)
-//  Dados: Cloud Firestore (coleções "alunos" e "avaliacoes")
-// ============================================================
 
 import {
   auth,
@@ -33,12 +28,9 @@ import {
 const RATING_LABELS = ["", "Péssimo", "Ruim", "Regular", "Bom", "Excelente"];
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-let currentUser = null; // usuário do Firebase Auth
-let currentProfile = null; // documento do aluno no Firestore
+let currentUser = null;
+let currentProfile = null;
 let selectedStars = 0;
-// Evita corrida: o onAuthStateChanged dispara assim que a conta é criada,
-// antes de alunos/{uid} existir. Durante o cadastro, quem monta a tela é o
-// próprio formulário, que já sabe nome e curso.
 let cadastrando = false;
 
 function el(id) {
@@ -79,7 +71,6 @@ function formatarData(valor) {
   return data.toLocaleDateString("pt-BR");
 }
 
-// ---------- controle de telas ----------
 
 function hideAll() {
   el("authLoading").hidden = true;
@@ -139,19 +130,16 @@ function renderMyRating(rating) {
   el("myRatingDate").textContent = "Publicada em " + formatarData(rating.criadoEm);
 }
 
-// ---------- Firestore ----------
 
 async function carregarPerfil(user) {
   let snap = await getDoc(doc(db, COLECAO_ALUNOS, user.uid));
 
-  // O documento pode ainda estar sendo gravado (cadastro recém-feito).
   if (!snap.exists()) {
     await new Promise(function (r) { setTimeout(r, 900); });
     snap = await getDoc(doc(db, COLECAO_ALUNOS, user.uid));
   }
   if (snap.exists()) return snap.data();
 
-  // Conta criada no Auth mas sem documento (ex.: criada pelo console).
   const perfil = {
     nome: user.displayName || firstName(user.email),
     email: user.email,
@@ -167,7 +155,6 @@ async function carregarAvaliacao(user) {
   return snap.exists() ? snap.data() : null;
 }
 
-// ---------- estrelas ----------
 
 const starBtns = Array.prototype.slice.call(document.querySelectorAll(".star-btn"));
 
@@ -192,7 +179,6 @@ starBtns.forEach(function (btn) {
   });
 });
 
-// ---------- Firebase ausente ----------
 
 showLoading();
 
@@ -227,7 +213,6 @@ function iniciar() {
     showLogin();
   });
 
-  // ---------- sessão ----------
   onAuthStateChanged(auth, async function (user) {
     if (!user) {
       currentUser = null;
@@ -238,7 +223,6 @@ function iniciar() {
       return;
     }
 
-    // Durante o cadastro, o formulário monta a tela com os dados digitados.
     if (cadastrando) return;
 
     currentUser = user;
@@ -253,7 +237,6 @@ function iniciar() {
     }
   });
 
-  // ---------- cadastro ----------
   el("registerForm").addEventListener("submit", async function (e) {
     e.preventDefault();
     const form = e.currentTarget;
@@ -290,8 +273,6 @@ function iniciar() {
     } catch (error) {
       console.error("[Simple English] Erro no cadastro:", error);
       setError("registerForm", mensagemErroAuth(error));
-      // Se a conta foi criada mas a gravação do perfil falhou, o usuário já
-      // está logado: abre o perfil com o que houver em vez de travar no form.
       if (auth.currentUser) {
         try {
           const perfil = await carregarPerfil(auth.currentUser);
@@ -308,7 +289,6 @@ function iniciar() {
     }
   });
 
-  // ---------- login ----------
   el("loginForm").addEventListener("submit", async function (e) {
     e.preventDefault();
     const form = e.currentTarget;
@@ -334,7 +314,6 @@ function iniciar() {
     }
   });
 
-  // ---------- recuperar senha ----------
   el("forgotPassword").addEventListener("click", async function (e) {
     e.preventDefault();
     const email = el("loginEmail").value.trim();
@@ -352,7 +331,6 @@ function iniciar() {
     }
   });
 
-  // ---------- publicar avaliação ----------
   el("saveRatingBtn").addEventListener("click", async function () {
     if (!currentUser || !currentProfile) return;
     if (selectedStars === 0) {
@@ -396,7 +374,6 @@ function iniciar() {
     }
   });
 
-  // ---------- sair ----------
   el("logoutBtn").addEventListener("click", async function () {
     try {
       await signOut(auth);

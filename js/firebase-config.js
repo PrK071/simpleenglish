@@ -1,17 +1,6 @@
-// ============================================================
-//  Simple English — Configuração do Firebase
-// ============================================================
-//  As credenciais ficam no arquivo ".env" na raiz do projeto,
-//  fora do Git (ver .gitignore). Copie ".env.example" para
-//  ".env" e preencha com os dados do seu projeto.
-//
-//  O carregamento é assíncrono: espere "firebaseReadyPromise"
-//  antes de usar auth/db, ou verifique "firebaseReady".
-//
-//  Obs.: a apiKey do Firebase é pública por design — o Firebase
-//  identifica o projeto por ela. A proteção real dos dados vem
-//  das regras do Firestore (firestore.rules), não do sigilo.
-// ============================================================
+// Credenciais no arquivo ".env" (fora do Git). Copie ".env.example"
+// para ".env" e preencha. A inicialização é assíncrona: espere
+// "firebaseReadyPromise" antes de usar auth/db.
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
@@ -67,8 +56,6 @@ export const firebaseReadyPromise = (async function () {
 
     app = initializeApp(config);
 
-    // App Check (reCAPTCHA Enterprise): a chave de site é pública;
-    // a validação acontece no lado do Google.
     try {
       appCheck = initializeAppCheck(app, {
         provider: new ReCaptchaEnterpriseProvider(env.RECAPTCHA_SITE_KEY || ""),
