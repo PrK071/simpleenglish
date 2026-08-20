@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matrícula — Simple English</title>
+  <meta name="description" content="Faça sua matrícula na Simple English e comece a falar inglês hoje.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="assets/logo.png">
+</head>
+<body class="auth-page">
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo" aria-label="Simple English - Início">
+        <img src="assets/logo.png" alt="Logo Simple English" class="logo-icon">
+        <span class="logo-text">Simple<span class="logo-accent">English</span></span>
+      </a>
+      <a href="index.html" class="btn btn-ghost">← Voltar ao site</a>
+    </div>
+  </header>
+
+  <main class="auth-main">
+    <div class="auth-grid">
+      <aside class="auth-aside">
+        <span class="section-tag">Matrícula 2026</span>
+        <h1>Comece a falar inglês hoje</h1>
+        <p>Preencha o formulário e nossa equipe entrará em contato em até 24h para confirmar sua vaga.</p>
+        <ul class="auth-perks">
+          <li>Nivelamento gratuito para novos alunos</li>
+          <li>Aula experimental sem compromisso</li>
+          <li>Acesso ao app exclusivo da escola</li>
+          <li>Certificado ao concluir cada nível</li>
+        </ul>
+        <div class="auth-social">
+          <p>Siga a escola:</p>
+          <a href="https://www.instagram.com/simplenglishce/" target="_blank" rel="noopener" class="btn btn-outline-light">Instagram</a>
+          <a href="https://api.whatsapp.com/send/?phone=5585987996315&text&type=phone_number&app_absent=0" target="_blank" rel="noopener" class="btn btn-outline-light">WhatsApp</a>
+        </div>
+      </aside>
+
+      <section class="auth-card">
+        <form id="signupForm" novalidate>
+          <h2>Criar minha matrícula</h2>
+          <p class="form-sub">Leva menos de 2 minutos.</p>
+
+          <div class="form-group">
+            <label for="nome">Nome completo *</label>
+            <input type="text" id="nome" name="nome" placeholder="Seu nome completo" required autocomplete="name">
+            <small class="error-msg" data-error-for="nome"></small>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="email">E-mail *</label>
+              <input type="email" id="email" name="email" placeholder="voce@email.com" required autocomplete="email">
+              <small class="error-msg" data-error-for="email"></small>
+            </div>
+            <div class="form-group">
+              <label for="telefone">WhatsApp *</label>
+              <input type="tel" id="telefone" name="telefone" placeholder="(85) 99999-9999" required autocomplete="tel">
+              <small class="error-msg" data-error-for="telefone"></small>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="curso">Curso de interesse *</label>
+              <select id="curso" name="curso" required>
+                <option value="" disabled selected>Selecione um curso</option>
+                <option value="kids">Kids & Teens</option>
+                <option value="regular">Curso Regular</option>
+                <option value="preparacao">Preparação TOEFL / IELTS</option>
+                <option value="conversacao">Conversação</option>
+                <option value="nao-sei">Ainda não sei</option>
+              </select>
+              <small class="error-msg" data-error-for="curso"></small>
+            </div>
+            <div class="form-group">
+              <label for="modalidade">Modalidade *</label>
+              <select id="modalidade" name="modalidade" required>
+                <option value="" disabled selected>Selecione</option>
+                <option value="presencial">Presencial</option>
+                <option value="online">Online</option>
+                <option value="hibrido">Híbrido</option>
+              </select>
+              <small class="error-msg" data-error-for="modalidade"></small>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="nivel">Seu nível de inglês hoje</label>
+            <div class="level-options">
+              <label class="level-option">
+                <input type="radio" name="nivel" value="zero">
+                <span>Do zero</span>
+              </label>
+              <label class="level-option">
+                <input type="radio" name="nivel" value="basico">
+                <span>Básico</span>
+              </label>
+              <label class="level-option">
+                <input type="radio" name="nivel" value="intermediario">
+                <span>Intermediário</span>
+              </label>
+              <label class="level-option">
+                <input type="radio" name="nivel" value="avancado">
+                <span>Avançado</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="mensagem">Mensagem (opcional)</label>
+            <textarea id="mensagem" name="mensagem" rows="3" placeholder="Conte-nos seu objetivo com o inglês..."></textarea>
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="termos" name="termos" required>
+              <span>Li e aceito a <a href="#" id="termosLink">política de privacidade</a> e o uso dos meus dados para contato. *</span>
+            </label>
+            <small class="error-msg" data-error-for="termos"></small>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg btn-block" id="submitBtn">Enviar matrícula</button>
+          <p class="form-footer">Já é aluno? <a href="#">Fale com a secretaria</a></p>
+        </form>
+
+        <div class="success-panel" id="successPanel" hidden>
+          <div class="success-icon">✓</div>
+          <h2>Matrícula enviada!</h2>
+          <p>Agradecemos o interesse, <strong id="successName">aluno</strong>! Nossa equipe entrará em contato pelo WhatsApp em até 24h para confirmar sua vaga no curso <strong id="successCourse"></strong>.</p>
+          <a href="index.html" class="btn btn-primary btn-block">Voltar ao site</a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-bottom">
+      <p>© 2026 Simple English. Todos os direitos reservados.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="js/main.js"></script>
+  <script src="js/protecao.js"></script>
+</body>
+</html>

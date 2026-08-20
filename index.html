@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple English — Escola de Inglês</title>
+  <meta name="description" content="Simple English: aprenda inglês de forma simples, rápida e eficaz. Aulas presenciais e online com professores qualificados.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Fraunces:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="assets/logo.png">
+</head>
+<body>
+
+  <div class="intro" id="intro" aria-hidden="true">
+    <canvas id="introCanvas"></canvas>
+    <div class="intro-brand" id="introBrand">Simple<span class="accent">English</span></div>
+  </div>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo" aria-label="Simple English - Início">
+        <img src="assets/logo.png" alt="Logo Simple English" class="logo-icon">
+        <span class="logo-text">Simple<span class="logo-accent">English</span></span>
+      </a>
+
+      <nav class="main-nav" id="mainNav">
+        <a href="#inicio" class="active">Início</a>
+        <a href="#metodo">Método</a>
+        <a href="#cursos">Cursos</a>
+        <a href="#avaliacoes">Avaliações</a>
+        <a href="#contato">Contato</a>
+        <a href="cadastro.html" class="btn nav-cta liquid-glass">Matricule-se</a>
+      </nav>
+
+      <button class="nav-toggle" id="navToggle" aria-label="Abrir menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="inicio">
+      <video class="hero-video" autoplay loop muted playsinline aria-hidden="true">
+        <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4" type="video/mp4">
+      </video>
+      <div class="hero-content">
+        <h1 class="animate-fade-rise">Onde os sonhos <em>aprendem a falar inglês</em></h1>
+        <p class="hero-sub animate-fade-rise-delay">Na Simple English, aprender inglês é simples: aulas práticas, foco total na conversação e um espaço tranquilo para você evoluir do zero à fluência — no seu ritmo, sem pressa.</p>
+        <a href="cadastro.html" class="btn liquid-glass hero-cta animate-fade-rise-delay-2">Começar minha jornada</a>
+      </div>
+    </section>
+
+    <section class="section method" id="metodo">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-tag">Nosso método</span>
+          <h2>Aprender inglês pode (e deve) ser simples</h2>
+          <p>Esqueça métodos engessados. Nosso ensino é focado no que realmente importa: você falando inglês desde a primeira aula.</p>
+        </div>
+        <div class="method-grid">
+          <div class="method-card">
+            <svg class="method-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            <h3>Foco na conversação</h3>
+            <p>80% das aulas são práticas de fala. Você aprende se comunicando, não decorando.</p>
+          </div>
+          <div class="method-card">
+            <svg class="method-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            <h3>Objetivos claros</h3>
+            <p>Plano de estudos personalizado com metas mensais e acompanhamento individual.</p>
+          </div>
+          <div class="method-card">
+            <svg class="method-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <h3>Professores qualificados</h3>
+            <p>Equipe certificada e apaixonada por ensinar, com vivência internacional.</p>
+          </div>
+          <div class="method-card">
+            <svg class="method-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            <h3>App exclusivo</h3>
+            <p>Exercícios, áudios e suporte extra para praticar a qualquer hora, onde estiver.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section courses" id="cursos">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-tag">Cursos</span>
+          <h2>Um curso para cada objetivo</h2>
+          <p>Do primeiro contato com o idioma à preparação para provas internacionais.</p>
+        </div>
+        <div class="courses-grid">
+          <div class="course-card">
+            <div class="course-level">Básico</div>
+            <h3>Kids & Teens</h3>
+            <p>Inglês para crianças e adolescentes com metodologia lúdica e moderna.</p>
+            <ul class="course-list">
+              <li>Turmas por idade</li>
+              <li>Aulas dinâmicas e divertidas</li>
+              <li>Material ilustrado incluso</li>
+            </ul>
+            <a href="cadastro.html" class="btn btn-outline btn-block">Quero essa turma</a>
+          </div>
+          <div class="course-card featured">
+            <span class="course-badge">Mais procurado</span>
+            <div class="course-level">Do zero à fluência</div>
+            <h3>Curso Regular</h3>
+            <p>Para jovens e adultos que querem aprender inglês do absoluto zero à fluência.</p>
+            <ul class="course-list">
+              <li>2 aulas por semana</li>
+              <li>Foco total em conversação</li>
+              <li>Material e app inclusos</li>
+              <li>Certificado ao concluir</li>
+            </ul>
+            <a href="cadastro.html" class="btn btn-primary btn-block">Quero essa turma</a>
+          </div>
+          <div class="course-card">
+            <div class="course-level">Avançado</div>
+            <h3>Preparação TOEFL / IELTS</h3>
+            <p>Intensivo para quem precisa de certificação internacional ou intercâmbio.</p>
+            <ul class="course-list">
+              <li>Simulados oficiais</li>
+              <li>Professor especialista</li>
+              <li>Plano intensivo</li>
+            </ul>
+            <a href="cadastro.html" class="btn btn-outline btn-block">Quero essa turma</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section testimonials" id="avaliacoes" hidden>
+      <div class="container">
+        <div class="section-head">
+          <span class="section-tag">Avaliações</span>
+          <h2>O que nossos alunos dizem</h2>
+          <p>Avaliações feitas pelos próprios alunos na área do aluno.</p>
+        </div>
+        <div class="testimonials-grid" id="ratingsGrid"></div>
+        <div class="ratings-cta">
+          <p>É aluno da Simple English?</p>
+          <a href="aluno.html" class="btn btn-primary">Avaliar meu curso</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section cta" id="contato">
+      <div class="container cta-inner">
+        <h2>Pronto para falar inglês de verdade?</h2>
+        <p>Garanta sua vaga nas turmas de 2026. Vagas limitadas por turma para manter a qualidade do ensino.</p>
+        <div class="cta-actions">
+          <a href="cadastro.html" class="btn btn-light btn-lg">Quero me matricular</a>
+          <a href="https://www.instagram.com/simplenglishce/" target="_blank" rel="noopener" class="btn btn-outline-light btn-lg">Seguir no Instagram</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <a href="index.html" class="logo">
+          <img src="assets/logo.png" alt="Logo Simple English" class="logo-icon">
+          <span class="logo-text">Simple<span class="logo-accent">English</span></span>
+        </a>
+        <p>Inglês de verdade, do jeito simples.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Navegação</h4>
+        <a href="#inicio">Início</a>
+        <a href="#metodo">Método</a>
+        <a href="#cursos">Cursos</a>
+        <a href="cadastro.html">Matrícula</a>
+        <a href="aluno.html">Área do aluno</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contato</h4>
+        <a href="https://www.instagram.com/simplenglishce/" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://api.whatsapp.com/send/?phone=5585987996315&text&type=phone_number&app_absent=0" target="_blank" rel="noopener">WhatsApp</a>
+        <span>contato@simpleenglish.com.br</span>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p>© 2026 Simple English. Todos os direitos reservados.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="js/main.js"></script>
+  <script src="js/intro.js"></script>
+  <script src="js/protecao.js"></script>
+</body>
+</html>

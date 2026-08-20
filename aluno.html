@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Área do Aluno — Simple English</title>
+  <meta name="description" content="Área do aluno da Simple English: acesse seu perfil e avalie seu curso.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="assets/logo.png">
+</head>
+<body class="auth-page">
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo" aria-label="Simple English - Início">
+        <img src="assets/logo.png" alt="Logo Simple English" class="logo-icon">
+        <span class="logo-text">Simple<span class="logo-accent">English</span></span>
+      </a>
+      <a href="index.html" class="btn btn-ghost">← Voltar ao site</a>
+    </div>
+  </header>
+
+  <main class="auth-main">
+    <div class="auth-grid">
+      <aside class="auth-aside">
+        <span class="section-tag">Área do aluno</span>
+        <h1>Seu perfil na Simple English</h1>
+        <p>Acesse sua conta para acompanhar seu curso e deixar sua avaliação sobre a escola.</p>
+        <ul class="auth-perks">
+          <li>Avalie seu curso e seus professores</li>
+          <li>Veja seu histórico de avaliações</li>
+          <li>Seus dados ficam protegidos</li>
+        </ul>
+      </aside>
+
+      <section class="auth-card">
+        <div id="authLoading" class="auth-loading">
+          <span class="auth-spinner" aria-hidden="true"></span>
+          <p>Verificando sua sessão...</p>
+        </div>
+
+        <div id="loginView" hidden>
+          <form id="loginForm" novalidate>
+            <h2>Entrar</h2>
+            <p class="form-sub">Acesse sua conta de aluno.</p>
+
+            <div class="form-group">
+              <label for="loginEmail">E-mail *</label>
+              <input type="email" id="loginEmail" name="loginEmail" placeholder="voce@email.com" required autocomplete="email">
+              <small class="error-msg" data-error-for="loginEmail"></small>
+            </div>
+
+            <div class="form-group">
+              <label for="loginSenha">Senha *</label>
+              <input type="password" id="loginSenha" name="loginSenha" placeholder="Sua senha" required autocomplete="current-password">
+              <small class="error-msg" data-error-for="loginSenha"></small>
+            </div>
+
+            <div class="form-group">
+              <small class="error-msg" data-error-for="loginForm"></small>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg btn-block">Entrar</button>
+            <p class="form-footer"><a href="#" id="forgotPassword">Esqueci minha senha</a></p>
+            <p class="form-footer">Ainda não tem conta? <a href="#" id="showRegister">Criar conta</a></p>
+          </form>
+
+          <form id="registerForm" novalidate hidden>
+            <h2>Criar conta</h2>
+            <p class="form-sub">Crie seu perfil de aluno em menos de 1 minuto.</p>
+
+            <div class="form-group">
+              <label for="regNome">Nome completo *</label>
+              <input type="text" id="regNome" name="regNome" placeholder="Seu nome completo" required autocomplete="name">
+              <small class="error-msg" data-error-for="regNome"></small>
+            </div>
+
+            <div class="form-group">
+              <label for="regEmail">E-mail *</label>
+              <input type="email" id="regEmail" name="regEmail" placeholder="voce@email.com" required autocomplete="email">
+              <small class="error-msg" data-error-for="regEmail"></small>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="regSenha">Senha *</label>
+                <input type="password" id="regSenha" name="regSenha" placeholder="Mínimo 6 caracteres" required autocomplete="new-password">
+                <small class="error-msg" data-error-for="regSenha"></small>
+              </div>
+              <div class="form-group">
+                <label for="regSenha2">Confirmar senha *</label>
+                <input type="password" id="regSenha2" name="regSenha2" placeholder="Repita a senha" required autocomplete="new-password">
+                <small class="error-msg" data-error-for="regSenha2"></small>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="regCurso">Seu curso</label>
+              <select id="regCurso" name="regCurso">
+                <option value="" selected>Escolha seu curso (opcional)</option>
+                <option value="Kids & Teens">Kids & Teens</option>
+                <option value="Curso Regular">Curso Regular</option>
+                <option value="Preparação TOEFL / IELTS">Preparação TOEFL / IELTS</option>
+                <option value="Conversação">Conversação</option>
+              </select>
+              <small class="error-msg" data-error-for="regCurso"></small>
+            </div>
+
+            <div class="form-group">
+              <small class="error-msg" data-error-for="registerForm"></small>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg btn-block">Criar minha conta</button>
+            <p class="form-footer">Já tem conta? <a href="#" id="showLogin">Entrar</a></p>
+          </form>
+        </div>
+
+        <div id="profileView" hidden>
+          <div class="profile-head">
+            <span class="profile-avatar" id="profileAvatar">AL</span>
+            <div>
+              <h2 id="profileName">Aluno</h2>
+              <p class="profile-email" id="profileEmail"></p>
+              <p class="profile-curso" id="profileCurso"></p>
+            </div>
+          </div>
+
+          <hr class="profile-divider">
+
+          <div class="rating-section">
+            <h3 id="ratingTitle">Avaliar meu curso</h3>
+            <p class="form-sub">Sua avaliação aparece na página inicial, identificada apenas pelo seu primeiro nome.</p>
+
+            <div class="form-group">
+              <label>Qual nota você dá para a Simple English? *</label>
+              <div class="rating-stars" id="ratingStars" role="radiogroup" aria-label="Nota do curso">
+                <button type="button" class="star-btn" data-value="1" aria-label="1 estrela">★</button>
+                <button type="button" class="star-btn" data-value="2" aria-label="2 estrelas">★</button>
+                <button type="button" class="star-btn" data-value="3" aria-label="3 estrelas">★</button>
+                <button type="button" class="star-btn" data-value="4" aria-label="4 estrelas">★</button>
+                <button type="button" class="star-btn" data-value="5" aria-label="5 estrelas">★</button>
+                <span class="rating-label" id="ratingLabel"></span>
+              </div>
+              <small class="error-msg" data-error-for="ratingStars"></small>
+            </div>
+
+            <div class="form-group">
+              <label for="ratingComentario">Comentário (opcional)</label>
+              <textarea id="ratingComentario" rows="4" placeholder="Conte sua experiência com as aulas, os professores, o material..."></textarea>
+            </div>
+
+            <button type="button" class="btn btn-primary btn-lg btn-block" id="saveRatingBtn">Publicar minha avaliação</button>
+
+            <div class="my-rating" id="myRating" hidden>
+              <h4>Sua avaliação</h4>
+              <div class="my-rating-card">
+                <span class="stars" id="myRatingStars"></span>
+                <p id="myRatingText"></p>
+                <small id="myRatingDate"></small>
+              </div>
+              <p class="rating-note">Quer mudar sua nota? Basta avaliar novamente — sua avaliação anterior será substituída.</p>
+            </div>
+          </div>
+
+          <hr class="profile-divider">
+
+          <button type="button" class="btn btn-ghost btn-block" id="logoutBtn">Sair da conta</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-bottom">
+      <p>© 2026 Simple English. Todos os direitos reservados.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="js/aluno.js"></script>
+  <script src="js/protecao.js"></script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+rules_version = '2';
+
+// ============================================================
+//  Regras de segurança do Firestore — Simple English
+//  Publique no console: Firestore Database > Regras > colar > Publicar
+//  (ou via CLI: firebase deploy --only firestore:rules)
+// ============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- Perfis dos alunos ----
+    // Cada aluno só lê e escreve o próprio documento (id = uid do Auth).
+    match /alunos/{uid} {
+      allow read, update, delete: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && request.resource.data.nome is string
+                    && request.resource.data.nome.size() > 0
+                    && request.resource.data.email == request.auth.token.email;
+    }
+
+    // ---- Avaliações ----
+    // Leitura pública (aparecem na home). Escrita só do próprio autor,
+    // uma avaliação por aluno (id do documento = uid).
+    match /avaliacoes/{uid} {
+      allow read: if true;
+      allow create, update: if request.auth != null
+                            && request.auth.uid == uid
+                            && request.resource.data.nota is int
+                            && request.resource.data.nota >= 1
+                            && request.resource.data.nota <= 5
+                            && request.resource.data.comentario is string
+                            && request.resource.data.comentario.size() <= 600;
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ---- Matrículas (formulário público) ----
+    // Qualquer visitante pode enviar, ninguém pode ler pelo site.
+    // Consulte os envios pelo console do Firebase.
+    match /matriculas/{docId} {
+      allow create: if request.resource.data.nome is string
+                    && request.resource.data.nome.size() > 0
+                    && request.resource.data.nome.size() <= 120
+                    && request.resource.data.email is string
+                    && request.resource.data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+                    && request.resource.data.telefone is string
+                    && request.resource.data.mensagem is string
+                    && request.resource.data.mensagem.size() <= 1000;
+      allow read, update, delete: if false;
+    }
+
+    // Bloqueia qualquer outra coleção.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
