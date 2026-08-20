@@ -1,6 +1,20 @@
-// Credenciais no arquivo ".env" (fora do Git). Copie ".env.example"
-// para ".env" e preencha. A inicialização é assíncrona: espere
-// "firebaseReadyPromise" antes de usar auth/db.
+// ============================================================
+//  Simple English — Configuração do Firebase
+// ============================================================
+//  Projeto: simpleenglish-fabf9 (plano Spark, região southamerica-east1)
+//
+//  Estes valores são IDENTIFICADORES PÚBLICOS, não segredos: todo app
+//  web Firebase os entrega ao navegador. Quem abrir o DevTools vê os
+//  mesmos dados em qualquer site que use Firebase. A proteção real vem de:
+//    1. regras do Firestore (firestore.rules)
+//    2. domínios autorizados no Firebase Authentication
+//    3. restrição da API key por referrer HTTP no Google Cloud
+//    4. App Check em modo enforce
+//
+//  NUNCA coloque segredo de verdade aqui nem em nenhum arquivo servido ao
+//  navegador (chave de API paga, credencial de service account, senha SMTP).
+//  Segredo real vive só em backend/Cloud Functions.
+// ============================================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
@@ -10,72 +24,46 @@ import {
   ReCaptchaEnterpriseProvider
 } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app-check.js";
 
+const firebaseConfig = {
+  apiKey: "AIzaSyAwXVoZKkZlRN2DmpPclxdX3a4lUbUfonc",
+  authDomain: "simpleenglish-fabf9.firebaseapp.com",
+  projectId: "simpleenglish-fabf9",
+  storageBucket: "simpleenglish-fabf9.firebasestorage.app",
+  messagingSenderId: "35725399587",
+  appId: "1:35725399587:web:9431c2af7f4d2c48334396",
+  measurementId: "G-PX8ZD3JJTP"
+};
+
+// Chave de site do reCAPTCHA Enterprise (pública; a validação é no Google).
+// Domínios autorizados: console.cloud.google.com > Segurança > reCAPTCHA >
+// chave "simple-english-site" > Lista de domínios.
+const RECAPTCHA_SITE_KEY = "6LeU3IktAAAAAEfQAsUa46ft6jiYeVfZynkyraim";
+
 // Nomes das coleções usadas no Firestore.
 export const COLECAO_ALUNOS = "alunos";
 export const COLECAO_AVALIACOES = "avaliacoes";
 export const COLECAO_MATRICULAS = "matriculas";
 
-export let app = null;
-export let auth = null;
-export let db = null;
-export let appCheck = null;
-export let firebaseReady = false;
+export const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
 
-function parseEnv(texto) {
-  const env = {};
-  for (const linha of texto.split(/\r?\n/)) {
-    const limpa = linha.trim();
-    if (!limpa || limpa.startsWith("#")) continue;
-    const eq = limpa.indexOf("=");
-    if (eq === -1) continue;
-    env[limpa.slice(0, eq).trim()] = limpa.slice(eq + 1).trim().replace(/^["']|["']$/g, "");
-  }
-  return env;
+export let appCheck = null;
+try {
+  appCheck = initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
+    isTokenAutoRefreshEnabled: true
+  });
+} catch (erro) {
+  // App Check ausente não deve derrubar o site; o Firestore segue protegido
+  // pelas regras. Ligue o enforcement no console só após autorizar o domínio.
+  console.warn("[Simple English] App Check nao inicializou:", erro);
 }
 
-export const firebaseReadyPromise = (async function () {
-  try {
-    const resposta = await fetch(".env", { cache: "no-store" });
-    if (!resposta.ok) throw new Error("HTTP " + resposta.status);
-    const env = parseEnv(await resposta.text());
-
-    const config = {
-      apiKey: env.FIREBASE_API_KEY,
-      authDomain: env.FIREBASE_AUTH_DOMAIN,
-      projectId: env.FIREBASE_PROJECT_ID,
-      storageBucket: env.FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: env.FIREBASE_MESSAGING_SENDER_ID,
-      appId: env.FIREBASE_APP_ID,
-      measurementId: env.FIREBASE_MEASUREMENT_ID
-    };
-
-    const incompleto = Object.values(config).some(function (value) {
-      return typeof value !== "string" || value === "" || value.indexOf("COLE_AQUI") === 0;
-    });
-    if (incompleto) throw new Error("variaveis ausentes no .env");
-
-    app = initializeApp(config);
-
-    try {
-      appCheck = initializeAppCheck(app, {
-        provider: new ReCaptchaEnterpriseProvider(env.RECAPTCHA_SITE_KEY || ""),
-        isTokenAutoRefreshEnabled: true
-      });
-    } catch (erro) {
-      console.warn("[Simple English] App Check nao inicializou:", erro);
-    }
-
-    auth = getAuth(app);
-    db = getFirestore(app);
-    firebaseReady = true;
-  } catch (erro) {
-    console.warn(
-      "[Simple English] Firebase não configurado. Copie .env.example para .env " +
-        "e preencha os dados do seu projeto:",
-      erro
-    );
-  }
-})();
+// A inicialização é síncrona. As duas exportações abaixo existem para manter
+// compatibilidade com o código que aguardava carregamento assíncrono.
+export const firebaseReady = true;
+export const firebaseReadyPromise = Promise.resolve();
 
 // Traduz os códigos de erro do Firebase Auth para mensagens em português.
 export function mensagemErroAuth(error) {

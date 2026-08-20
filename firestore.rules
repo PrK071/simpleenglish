@@ -4,6 +4,12 @@ rules_version = '2';
 //  Regras de segurança do Firestore — Simple English
 //  Publique no console: Firestore Database > Regras > colar > Publicar
 //  (ou via CLI: firebase deploy --only firestore:rules)
+//
+//  Princípio: esta é a ÚNICA barreira real do projeto. As chaves do
+//  firebase-config.js são públicas por design, então tudo que estas
+//  regras permitirem, qualquer pessoa na internet consegue fazer.
+//  Por isso cada coleção usa lista fechada de campos (hasOnly),
+//  limite de tamanho e carimbo de tempo do servidor.
 // ============================================================
 
 service cloud.firestore {
@@ -12,41 +18,65 @@ service cloud.firestore {
     // ---- Perfis dos alunos ----
     // Cada aluno só lê e escreve o próprio documento (id = uid do Auth).
     match /alunos/{uid} {
-      allow read, update, delete: if request.auth != null && request.auth.uid == uid;
-      allow create: if request.auth != null
-                    && request.auth.uid == uid
-                    && request.resource.data.nome is string
-                    && request.resource.data.nome.size() > 0
-                    && request.resource.data.email == request.auth.token.email;
+      function perfilValido(d) {
+        return d.keys().hasOnly(['nome', 'email', 'curso', 'criadoEm'])
+               && d.nome is string && d.nome.size() > 0 && d.nome.size() <= 120
+               && d.email is string && d.email == request.auth.token.email
+               && d.curso is string && d.curso.size() <= 120
+               && d.criadoEm == request.time;
+      }
+
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null
+                            && request.auth.uid == uid
+                            && perfilValido(request.resource.data);
     }
 
     // ---- Avaliações ----
     // Leitura pública (aparecem na home). Escrita só do próprio autor,
     // uma avaliação por aluno (id do documento = uid).
+    // Guarda apenas primeiro nome e curso — nunca e-mail ou telefone.
     match /avaliacoes/{uid} {
+      function avaliacaoValida(d) {
+        return d.keys().hasOnly(['uid', 'nome', 'curso', 'nota', 'comentario', 'criadoEm'])
+               && d.uid == uid
+               && d.nome is string && d.nome.size() > 0 && d.nome.size() <= 60
+               && d.curso is string && d.curso.size() <= 120
+               && d.nota is int && d.nota >= 1 && d.nota <= 5
+               && d.comentario is string && d.comentario.size() <= 600
+               && d.criadoEm == request.time;
+      }
+
       allow read: if true;
       allow create, update: if request.auth != null
                             && request.auth.uid == uid
-                            && request.resource.data.nota is int
-                            && request.resource.data.nota >= 1
-                            && request.resource.data.nota <= 5
-                            && request.resource.data.comentario is string
-                            && request.resource.data.comentario.size() <= 600;
+                            && avaliacaoValida(request.resource.data);
       allow delete: if request.auth != null && request.auth.uid == uid;
     }
 
     // ---- Matrículas (formulário público) ----
     // Qualquer visitante pode enviar, ninguém pode ler pelo site.
     // Consulte os envios pelo console do Firebase.
+    // Atenção: escrita anônima é aberta por natureza. Mantenha o App Check
+    // em modo enforce para conter envio automatizado em massa.
     match /matriculas/{docId} {
-      allow create: if request.resource.data.nome is string
-                    && request.resource.data.nome.size() > 0
-                    && request.resource.data.nome.size() <= 120
-                    && request.resource.data.email is string
-                    && request.resource.data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
-                    && request.resource.data.telefone is string
-                    && request.resource.data.mensagem is string
-                    && request.resource.data.mensagem.size() <= 1000;
+      function matriculaValida(d) {
+        return d.keys().hasOnly(['nome', 'email', 'telefone', 'curso', 'cursoId',
+                                 'modalidade', 'nivel', 'mensagem', 'status', 'criadoEm'])
+               && d.nome is string && d.nome.size() > 0 && d.nome.size() <= 120
+               && d.email is string && d.email.size() <= 160
+               && d.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+               && d.telefone is string && d.telefone.size() <= 40
+               && d.curso is string && d.curso.size() <= 120
+               && d.cursoId is string && d.cursoId.size() <= 60
+               && d.modalidade is string && d.modalidade.size() <= 60
+               && d.nivel is string && d.nivel.size() <= 60
+               && d.mensagem is string && d.mensagem.size() <= 1000
+               && d.status == 'novo'
+               && d.criadoEm == request.time;
+      }
+
+      allow create: if matriculaValida(request.resource.data);
       allow read, update, delete: if false;
     }
 
