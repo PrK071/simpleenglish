@@ -1,19 +1,16 @@
 // ============================================================
 //  Simple English — Configuração do Firebase
 // ============================================================
-//  Projeto: simpleenglish-fabf9 (plano Spark, região southamerica-east1)
-//  Já configurado e em funcionamento:
-//    - Authentication com provedor E-mail/senha ativo
-//    - Cloud Firestore edição Standard, banco (default)
-//    - Regras de segurança publicadas (ver firestore.rules na raiz)
+//  As credenciais ficam no arquivo ".env" na raiz do projeto,
+//  fora do Git (ver .gitignore). Copie ".env.example" para
+//  ".env" e preencha com os dados do seu projeto.
 //
-//  Se um dia mudar de projeto, troque o firebaseConfig abaixo pelos dados
-//  em Configurações do projeto > seus apps > app da Web, e republique as
-//  regras do arquivo firestore.rules em Firestore > Regras.
+//  O carregamento é assíncrono: espere "firebaseReadyPromise"
+//  antes de usar auth/db, ou verifique "firebaseReady".
 //
-//  Obs.: estas chaves são públicas por design (o Firebase identifica o
-//  projeto por elas). A proteção real dos dados vem das regras do
-//  Firestore, não do sigilo da apiKey.
+//  Obs.: a apiKey do Firebase é pública por design — o Firebase
+//  identifica o projeto por ela. A proteção real dos dados vem
+//  das regras do Firestore (firestore.rules), não do sigilo.
 // ============================================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
@@ -24,73 +21,74 @@ import {
   ReCaptchaEnterpriseProvider
 } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app-check.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAwXVoZKkZlRN2DmpPclxdX3a4lUbUfonc",
-  authDomain: "simpleenglish-fabf9.firebaseapp.com",
-  projectId: "simpleenglish-fabf9",
-  storageBucket: "simpleenglish-fabf9.firebasestorage.app",
-  messagingSenderId: "35725399587",
-  appId: "1:35725399587:web:9431c2af7f4d2c48334396",
-  measurementId: "G-PX8ZD3JJTP"
-};
-
 // Nomes das coleções usadas no Firestore.
 export const COLECAO_ALUNOS = "alunos";
 export const COLECAO_AVALIACOES = "avaliacoes";
 export const COLECAO_MATRICULAS = "matriculas";
 
-// Detecta se a configuração ainda está com os valores de exemplo,
-// para o site avisar em vez de quebrar silenciosamente.
-export const firebaseReady = !Object.values(firebaseConfig).some(function (value) {
-  return typeof value !== "string" || value.indexOf("COLE_AQUI") === 0 || value === "";
-});
+export let app = null;
+export let auth = null;
+export let db = null;
+export let appCheck = null;
+export let firebaseReady = false;
 
-// ------------------------------------------------------------
-//  App Check (reCAPTCHA Enterprise)
-//  Faz o navegador provar que a requisição saiu deste site antes
-//  do Firestore respondê-la. A chave abaixo é a "chave de site",
-//  pública por natureza; a validação acontece no lado do Google.
-//
-//  ATENÇÃO AO PUBLICAR: hoje a chave só autoriza o domínio
-//  "localhost". Antes de colocar o site no ar, adicione o domínio
-//  real em console.cloud.google.com > Segurança > reCAPTCHA >
-//  chave "simple-english-site" > editar > Lista de domínios.
-//  A imposição (enforcement) está DESLIGADA no console, de propósito:
-//  assim, se o token falhar, o site continua funcionando. Ligue em
-//  Firebase > App Check > APIs > Cloud Firestore só depois de
-//  confirmar que o domínio real está autorizado.
-// ------------------------------------------------------------
-export const RECAPTCHA_SITE_KEY = "6LeU3IktAAAAAEfQAsUa46ft6jiYeVfZynkyraim";
-
-let app = null;
-let auth = null;
-let db = null;
-let appCheck = null;
-
-if (firebaseReady) {
-  app = initializeApp(firebaseConfig);
-
-  // Inicializado antes dos demais serviços, para que as chamadas já
-  // saiam com o token de atestado.
-  try {
-    appCheck = initializeAppCheck(app, {
-      provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
-      isTokenAutoRefreshEnabled: true
-    });
-  } catch (erro) {
-    console.warn("[Simple English] App Check nao inicializou:", erro);
+function parseEnv(texto) {
+  const env = {};
+  for (const linha of texto.split(/\r?\n/)) {
+    const limpa = linha.trim();
+    if (!limpa || limpa.startsWith("#")) continue;
+    const eq = limpa.indexOf("=");
+    if (eq === -1) continue;
+    env[limpa.slice(0, eq).trim()] = limpa.slice(eq + 1).trim().replace(/^["']|["']$/g, "");
   }
-
-  auth = getAuth(app);
-  db = getFirestore(app);
-} else {
-  console.warn(
-    "[Simple English] Firebase não configurado. Preencha js/firebase-config.js " +
-      "com os dados do seu projeto para ativar cadastro, login e avaliações."
-  );
+  return env;
 }
 
-export { app, auth, db, appCheck };
+export const firebaseReadyPromise = (async function () {
+  try {
+    const resposta = await fetch(".env", { cache: "no-store" });
+    if (!resposta.ok) throw new Error("HTTP " + resposta.status);
+    const env = parseEnv(await resposta.text());
+
+    const config = {
+      apiKey: env.FIREBASE_API_KEY,
+      authDomain: env.FIREBASE_AUTH_DOMAIN,
+      projectId: env.FIREBASE_PROJECT_ID,
+      storageBucket: env.FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: env.FIREBASE_MESSAGING_SENDER_ID,
+      appId: env.FIREBASE_APP_ID,
+      measurementId: env.FIREBASE_MEASUREMENT_ID
+    };
+
+    const incompleto = Object.values(config).some(function (value) {
+      return typeof value !== "string" || value === "" || value.indexOf("COLE_AQUI") === 0;
+    });
+    if (incompleto) throw new Error("variaveis ausentes no .env");
+
+    app = initializeApp(config);
+
+    // App Check (reCAPTCHA Enterprise): a chave de site é pública;
+    // a validação acontece no lado do Google.
+    try {
+      appCheck = initializeAppCheck(app, {
+        provider: new ReCaptchaEnterpriseProvider(env.RECAPTCHA_SITE_KEY || ""),
+        isTokenAutoRefreshEnabled: true
+      });
+    } catch (erro) {
+      console.warn("[Simple English] App Check nao inicializou:", erro);
+    }
+
+    auth = getAuth(app);
+    db = getFirestore(app);
+    firebaseReady = true;
+  } catch (erro) {
+    console.warn(
+      "[Simple English] Firebase não configurado. Copie .env.example para .env " +
+        "e preencha os dados do seu projeto:",
+      erro
+    );
+  }
+})();
 
 // Traduz os códigos de erro do Firebase Auth para mensagens em português.
 export function mensagemErroAuth(error) {

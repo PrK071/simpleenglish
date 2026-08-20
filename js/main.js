@@ -1,4 +1,4 @@
-import { db, firebaseReady, COLECAO_AVALIACOES, COLECAO_MATRICULAS } from "./firebase-config.js";
+import { db, firebaseReady, firebaseReadyPromise, COLECAO_AVALIACOES, COLECAO_MATRICULAS } from "./firebase-config.js";
 import {
   collection,
   addDoc,
@@ -59,6 +59,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   async function renderRatings(section, grid) {
+    await firebaseReadyPromise;
     if (!firebaseReady) {
       section.hidden = true;
       return;

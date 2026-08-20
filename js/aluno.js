@@ -8,6 +8,7 @@ import {
   auth,
   db,
   firebaseReady,
+  firebaseReadyPromise,
   mensagemErroAuth,
   COLECAO_ALUNOS,
   COLECAO_AVALIACOES
@@ -193,21 +194,25 @@ starBtns.forEach(function (btn) {
 
 // ---------- Firebase ausente ----------
 
-if (!firebaseReady) {
-  showLogin();
-  setError(
-    "loginForm",
-    "Cadastro e login indisponíveis: o Firebase ainda não foi configurado em js/firebase-config.js."
-  );
-  el("loginForm").querySelectorAll("input, button").forEach(function (campo) {
-    campo.disabled = true;
-  });
-  el("showRegister").addEventListener("click", function (e) {
-    e.preventDefault();
-  });
-} else {
-  iniciar();
-}
+showLoading();
+
+firebaseReadyPromise.then(function () {
+  if (!firebaseReady) {
+    showLogin();
+    setError(
+      "loginForm",
+      "Cadastro e login indisponíveis: copie .env.example para .env e preencha os dados do Firebase."
+    );
+    el("loginForm").querySelectorAll("input, button").forEach(function (campo) {
+      campo.disabled = true;
+    });
+    el("showRegister").addEventListener("click", function (e) {
+      e.preventDefault();
+    });
+  } else {
+    iniciar();
+  }
+});
 
 function iniciar() {
   showLoading();

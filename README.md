@@ -50,13 +50,20 @@ E acesse `http://localhost:8000`.
 
 ## Firebase
 
-Configuração em `js/firebase-config.js` (projeto `simpleenglish-fabf9`):
+As credenciais ficam em um arquivo `.env` na raiz do projeto, **fora do Git** (ver `.gitignore`). Para configurar:
+
+```bash
+Copy-Item .env.example .env   # Windows
+cp .env.example .env          # Linux/macOS
+```
+
+E preencha o `.env` com os dados do projeto (`simpleenglish-fabf9`) em Configurações do projeto → seus apps → app da Web. O `firebase-config.js` carrega esse arquivo no navegador e inicializa os serviços de forma assíncrona (`firebaseReadyPromise`):
 
 - **Authentication** com provedor e-mail/senha
 - **Firestore** com as coleções `alunos`, `avaliacoes` e `matriculas`
 - **App Check** com reCAPTCHA Enterprise — a chave atual autoriza apenas `localhost`
 
-> As chaves no `firebase-config.js` são públicas por design: o Firebase identifica o projeto por elas, e a proteção real vem das regras do Firestore, não do sigilo da `apiKey`.
+> A `apiKey` do Firebase é pública por design: o Firebase identifica o projeto por ela, e a proteção real vem das regras do Firestore, não do sigilo da chave.
 
 Para publicar em outro domínio, adicione o domínio em:
 - Firebase Console → Authentication → Domínios autorizados
