@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>Matrícula — Simple English</title>
   <meta name="description" content="Faça sua matrícula na Simple English e comece a falar inglês hoje.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -45,23 +46,29 @@
       <section class="auth-card">
         <form id="signupForm" novalidate>
           <h2>Criar minha matrícula</h2>
-          <p class="form-sub">Leva menos de 2 minutos.</p>
+          <p class="form-sub">Leva menos de 2 minutos. Por segurança, é necessário entrar com um e-mail confirmado.</p>
+
+          <div class="verification-notice" id="matriculaAuthNotice" role="status">
+            <strong>Conta verificada necessária.</strong>
+            <p id="matriculaAuthNoticeText">Verificando sua conta...</p>
+            <a href="aluno.html" class="btn btn-ghost">Entrar ou criar conta</a>
+          </div>
 
           <div class="form-group">
             <label for="nome">Nome completo *</label>
-            <input type="text" id="nome" name="nome" placeholder="Seu nome completo" required autocomplete="name">
+            <input type="text" id="nome" name="nome" placeholder="Seu nome completo" required maxlength="120" autocomplete="name">
             <small class="error-msg" data-error-for="nome"></small>
           </div>
 
           <div class="form-row">
             <div class="form-group">
               <label for="email">E-mail *</label>
-              <input type="email" id="email" name="email" placeholder="voce@email.com" required autocomplete="email">
+              <input type="email" id="email" name="email" placeholder="voce@email.com" required maxlength="160" autocomplete="email">
               <small class="error-msg" data-error-for="email"></small>
             </div>
             <div class="form-group">
               <label for="telefone">WhatsApp *</label>
-              <input type="tel" id="telefone" name="telefone" placeholder="(85) 99999-9999" required autocomplete="tel">
+              <input type="tel" id="telefone" name="telefone" placeholder="(85) 99999-9999" required maxlength="15" autocomplete="tel">
               <small class="error-msg" data-error-for="telefone"></small>
             </div>
           </div>
@@ -71,7 +78,7 @@
               <label for="curso">Curso de interesse *</label>
               <select id="curso" name="curso" required>
                 <option value="" disabled selected>Selecione um curso</option>
-                <option value="kids">Kids & Teens</option>
+                <option value="kids">Kids &amp; Teens</option>
                 <option value="regular">Curso Regular</option>
                 <option value="preparacao">Preparação TOEFL / IELTS</option>
                 <option value="conversacao">Conversação</option>
@@ -115,19 +122,19 @@
 
           <div class="form-group">
             <label for="mensagem">Mensagem (opcional)</label>
-            <textarea id="mensagem" name="mensagem" rows="3" placeholder="Conte-nos seu objetivo com o inglês..."></textarea>
+            <textarea id="mensagem" name="mensagem" rows="3" maxlength="1000" placeholder="Conte-nos seu objetivo com o inglês..."></textarea>
           </div>
 
           <div class="form-group checkbox-group">
             <label class="checkbox-label">
               <input type="checkbox" id="termos" name="termos" required>
-              <span>Li e aceito a <a href="#" id="termosLink">política de privacidade</a> e o uso dos meus dados para contato. *</span>
+              <span>Li e aceito a <a href="privacidade.html" id="termosLink">política de privacidade</a> e o uso dos meus dados para contato. *</span>
             </label>
             <small class="error-msg" data-error-for="termos"></small>
           </div>
 
-          <button type="submit" class="btn btn-primary btn-lg btn-block" id="submitBtn">Enviar matrícula</button>
-          <p class="form-footer">Já é aluno? <a href="#">Fale com a secretaria</a></p>
+          <button type="submit" class="btn btn-primary btn-lg btn-block" id="submitBtn" disabled>Enviar matrícula</button>
+          <p class="form-footer">Já é aluno? <a href="aluno.html">Acessar minha conta</a></p>
         </form>
 
         <div class="success-panel" id="successPanel" hidden>

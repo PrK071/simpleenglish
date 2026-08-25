@@ -443,6 +443,10 @@ body.auth-page .nav-cta::before {
   transition: opacity 0.5s ease;
 }
 
+body.intro-active {
+  overflow: hidden;
+}
+
 .intro canvas {
   position: absolute;
   inset: 0;
@@ -901,6 +905,52 @@ body.auth-page .nav-cta::before {
   border-top-color: var(--primary);
   border-radius: 50%;
   animation: auth-spin 0.8s linear infinite;
+}
+
+.verification-notice {
+  margin: 1rem 0 1.5rem;
+  padding: 1rem;
+  border: 1px solid rgba(181, 119, 32, 0.35);
+  border-radius: 12px;
+  background: #fff8e8;
+  color: #513b19;
+}
+
+.verification-notice p {
+  margin: 0.4rem 0 0.8rem;
+}
+
+.verification-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.verification-actions .btn {
+  width: auto;
+}
+
+.verification-notice small {
+  display: block;
+  margin-top: 0.7rem;
+}
+
+.privacy-card {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.privacy-card h1 {
+  margin: 0.7rem 0 0.4rem;
+}
+
+.privacy-card h2 {
+  margin: 2rem 0 0.5rem;
+  font-size: 1.2rem;
+}
+
+.privacy-card p {
+  line-height: 1.75;
 }
 
 @keyframes auth-spin {

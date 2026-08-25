@@ -1,72 +1,88 @@
 # Simple English
 
-Site da escola **Simple English**: landing page institucional, cadastro de alunos e área do aluno com avaliações. Feito com HTML, CSS e JavaScript puro, usando **Firebase** (Authentication, Cloud Firestore e App Check) no plano Spark.
+Site da escola **Simple English**: landing page, formulário de matrícula e área do aluno com avaliações. A aplicação usa HTML, CSS e JavaScript puro com Firebase Authentication, Cloud Firestore e App Check. Todos os arquivos servidos ao navegador ficam em `public/`; configurações, testes e `.env` permanecem fora da raiz pública.
 
 ## Páginas
 
-| Arquivo       | Descrição                                                        |
-| ------------- | ---------------------------------------------------------------- |
-| `index.html`  | Landing page com intro animada, método, cursos e CTA de cadastro |
-| `cadastro.html` | Formulário de matrícula do aluno                                |
-| `aluno.html`  | Área do aluno: login/registro, perfil e avaliação da escola      |
+| Arquivo | Descrição |
+| --- | --- |
+| `public/index.html` | Landing page e avaliações públicas |
+| `public/cadastro.html` | Formulário de interesse em matrícula |
+| `public/aluno.html` | Login, registro, perfil e avaliação |
+| `public/privacidade.html` | Aviso sobre o tratamento de dados pessoais |
 
-## Estrutura
+## Controles de segurança
 
-```
-simpleenglish/
-├── index.html
-├── cadastro.html
-├── aluno.html
-├── firestore.rules          # regras de segurança do Firestore
-├── assets/                  # imagens e logo
-├── css/
-│   └── style.css
-└── js/
-    ├── firebase-config.js   # inicialização do Firebase (chaves públicas)
-    ├── intro.js             # animação de entrada (canvas)
-    ├── main.js              # lógica da landing page
-    └── aluno.js             # login, perfil e avaliações (estrelas)
-```
+- App Check com reCAPTCHA Enterprise inicializado antes de Auth/Firestore; a aplicação falha fechada se o atestado não subir.
+- Regras do Firestore com esquema fechado, validação de tipos/tamanhos, timestamps do servidor, autorização por UID e bloqueio padrão de coleções desconhecidas.
+- Matrículas exigem usuário autenticado com e-mail verificado. O documento usa o UID como ID, aceita uma única criação por conta e nenhum cliente pode ler, atualizar ou apagar esses dados.
+- Avaliações públicas só podem ser criadas ou alteradas pelo próprio UID após confirmação do e-mail; exclusões pelo cliente são bloqueadas para impedir o reset do cooldown por delete/recreate.
+- Recuperação de senha responde de forma genérica para reduzir enumeração de contas.
+- Senha de cadastro com no mínimo 12 caracteres no cliente e política autoritativa equivalente no Firebase Authentication.
+- Persistência de autenticação limitada à sessão da aba, logout após 30 minutos de inatividade e duração máxima local de 8 horas.
+- Firebase Hosting envia CSP, proteção contra clickjacking, `nosniff`, política de referência e restrições de recursos do navegador. Estilos inline em elementos são bloqueados; `style-src-attr 'unsafe-inline'` permanece isolado porque o SDK web do Firebase App Check/reCAPTCHA cria atributos de estilo dinamicamente.
+- Dependências de teste travadas em `package-lock.json`, auditoria automatizada, Dependabot e workflow de segurança com permissões mínimas.
 
-## Funcionalidades
+Os identificadores do app Firebase presentes em `public/js/firebase-config.js` são públicos por design. A proteção efetiva vem das restrições da chave, App Check, Authentication e regras do Firestore. O arquivo `.env` local não é usado pelo navegador, fica fora de `public/` e permanece ignorado pelo Git.
 
-- Landing page responsiva com animação de intro em canvas
-- Cadastro e login por e-mail/senha (Firebase Auth)
-- Perfil do aluno com foto/avatar e dados da matrícula
-- Avaliação da escola por estrelas (1–5), salva no Firestore
-- App Check com reCAPTCHA Enterprise para atestado das requisições
-- Regras de segurança do Firestore em `firestore.rules`
-## Rodando localmente
+## Desenvolvimento e testes
 
-O site usa módulos ES, então abrir direto por `file://` pode ser bloqueado pelo navegador. Use um servidor local:
+Pré-requisitos: Node.js 22 para reproduzir o CI, Java 21 para o emulador e Firebase CLI.
 
 ```bash
-python -m http.server 8000
+npm ci
+npm test
+firebase emulators:start --only hosting,firestore
 ```
 
-E acesse `http://localhost:8000`.
+Os testes cobrem a fronteira de 12 caracteres da senha, a CSP, isolamento de perfis, verificação de e-mail, campos extras, cooldown de avaliações, autorização e deduplicação das matrículas e default deny.
 
-## Firebase
+## Rate limiting
 
-A configuração fica direto em `js/firebase-config.js`, no projeto `simpleenglish-fabf9`. Serviços usados:
+`public/js/ratelimit.js` reduz repetição acidental e robôs ingênuos no navegador com uma escada de 30 segundos a 24 horas. Como o estado fica no `localStorage`, ele é apenas contenção de interface.
 
-- **Authentication** com provedor e-mail/senha
-- **Firestore** com as coleções `alunos`, `avaliacoes` e `matriculas`
-- **App Check** com reCAPTCHA Enterprise — a chave atual autoriza apenas `localhost`
+O Firestore aplica cooldown autoritativo às edições de uma avaliação. Para matrículas, as regras exigem conta com e-mail verificado e permitem somente uma criação no documento do próprio UID. Isso limita abuso básico e duplicação por conta sem backend pago. Um rate limit verdadeiro por IP ainda exigiria um endpoint controlado, como Cloud Functions/Cloud Run ou um Worker; App Check permanece como a barreira contra clientes não atestados.
 
-> `apiKey`, `appId` e a chave de site do reCAPTCHA são **públicas por design**: todo app web Firebase as entrega ao navegador, logo não há como escondê-las de quem abre o site. Elas identificam o projeto, não autorizam acesso.
+## Política de senha no Firebase
 
-Não existe `.env` neste projeto, de propósito: qualquer arquivo servido ao navegador é legível por qualquer visitante (`https://seu-dominio/.env`), então guardar credencial ali dá falsa sensação de sigilo. **Segredo de verdade** — chave de API paga, credencial de service account, senha SMTP — só pode viver em backend ou Cloud Functions, nunca neste repositório.
+A política do backend não é representada pelo arquivo de providers que o Firebase CLI aceita neste projeto. Ela deve permanecer configurada em:
 
-### O que realmente protege os dados
+`Firebase Console → Authentication → Settings → Password policy → Minimum length: 12 → Require`
 
-1. `firestore.rules` — cada coleção com lista fechada de campos (`hasOnly`), limites de tamanho e `criadoEm == request.time`. É a única barreira efetiva; republique após qualquer alteração em Firestore → Regras.
-2. Firebase Console → Authentication → Domínios autorizados: apenas domínios seus.
-3. Google Cloud Console → APIs e Serviços → Credenciais → restringir a API key por referrer HTTP e por API (Identity Toolkit, Firestore).
-4. Firebase Console → App Check → APIs → Cloud Firestore em modo **enforce** (só depois de autorizar o domínio real na chave reCAPTCHA), para conter envio automatizado em massa no formulário público de matrícula.
+Mantenha `Force upgrade on sign-in` desativado para que contas antigas continuem entrando com a senha atual. Novas senhas e alterações de senha passam a exigir 12 caracteres. O teste local garante o mesmo contrato no frontend; a configuração autoritativa deve ser verificada também no Firebase após cada alteração administrativa.
 
-Para publicar em outro domínio, adicione o domínio em:
-- Firebase Console → Authentication → Domínios autorizados
-- Google Cloud Console → Segurança → reCAPTCHA Enterprise → chave `simple-english-site` → Lista de domínios
+## Publicação
 
-E republique as regras de `firestore.rules` em Firestore → Regras.
+O projeto padrão é `simpleenglish-fabf9` e está definido em `.firebaserc`.
+
+```bash
+firebase deploy --only firestore:rules,hosting
+```
+
+Antes de conectar um domínio novo, inclua-o em:
+
+- Firebase Console → Authentication → Domínios autorizados;
+- Firebase Console/Google Cloud → reCAPTCHA Enterprise → domínios da chave;
+- Google Cloud Console → credencial da API → referrers autorizados.
+
+Depois conecte o domínio ao Firebase Hosting e use exatamente os registros DNS exibidos pelo console. Não mantenha registros do provedor antigo em paralelo. Verifique HTTPS, certificado e os cabeçalhos após a propagação.
+
+### Inventário de origens
+
+- `simpleenglishonline.web.app`: endereço público atual.
+- `simpleenglish-fabf9.firebaseapp.com`: domínio técnico usado por `authDomain`; deve permanecer autorizado.
+- `simpleenglish-fabf9.web.app`: site anterior mantido temporariamente para rollback.
+
+Os vínculos de `simpleenglish.com.br`, `www.simpleenglish.com.br` e do canal temporário de auditoria foram removidos porque não pertencem ao ambiente atual. Quando a janela de rollback terminar, desative o site anterior e só então remova `simpleenglish-fabf9.web.app` das listas de Authentication, API key e reCAPTCHA.
+
+## Controles operacionais externos ao repositório
+
+Devem permanecer configurados nas contas Google, GitHub, registrador e provedor DNS:
+
+- MFA/passkeys e contas administrativas individuais;
+- API key limitada aos domínios e APIs necessárias;
+- App Check em `enforce` para Authentication e Cloud Firestore;
+- política de senha do Firebase com mínimo de 12 caracteres e proteção contra enumeração de e-mails;
+- alertas de orçamento, uso, autenticação e alterações administrativas;
+- backups/exportações periódicas do Firestore, com teste de restauração;
+- proteção de branch e exigência do workflow `Security checks` antes de merge.

@@ -6,7 +6,7 @@
 
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reducedMotion || sessionStorage.getItem("se_intro_shown")) {
-    introEl.style.display = "none";
+    introEl.hidden = true;
     return;
   }
 
@@ -82,7 +82,7 @@
   let ptrX = -99999;
   let ptrY = -99999;
 
-  document.body.style.overflow = "hidden";
+  document.body.classList.add("intro-active");
 
   function sample() {
     particles = [];
@@ -137,7 +137,7 @@
 
   function finish() {
     sessionStorage.setItem("se_intro_shown", "1");
-    document.body.style.overflow = "";
+    document.body.classList.remove("intro-active");
     introEl.classList.add("intro-hidden");
     setTimeout(function () {
       introEl.remove();

@@ -1,86 +1,161 @@
 rules_version = '2';
 
-// ============================================================
-//  Regras de segurança do Firestore — Simple English
-//  Publique no console: Firestore Database > Regras > colar > Publicar
-//  (ou via CLI: firebase deploy --only firestore:rules)
-//
-//  Princípio: esta é a ÚNICA barreira real do projeto. As chaves do
-//  firebase-config.js são públicas por design, então tudo que estas
-//  regras permitirem, qualquer pessoa na internet consegue fazer.
-//  Por isso cada coleção usa lista fechada de campos (hasOnly),
-//  limite de tamanho e carimbo de tempo do servidor.
-// ============================================================
-
+// Regras de segurança do Firestore — Simple English.
+// A aplicação cliente é pública; estas regras são a barreira de autorização.
 service cloud.firestore {
   match /databases/{database}/documents {
+    function autenticado() {
+      return request.auth != null;
+    }
 
-    // ---- Perfis dos alunos ----
-    // Cada aluno só lê e escreve o próprio documento (id = uid do Auth).
+    function dono(uid) {
+      return autenticado() && request.auth.uid == uid;
+    }
+
+    function emailVerificado() {
+      return autenticado() && request.auth.token.email_verified == true;
+    }
+
+    function cursoAlunoValido(curso) {
+      return curso in [
+        '',
+        'Kids & Teens',
+        'Curso Regular',
+        'Preparação TOEFL / IELTS',
+        'Conversação'
+      ];
+    }
+
+    // Perfis: cada aluno acessa somente o documento com o próprio UID.
     match /alunos/{uid} {
       function perfilValido(d) {
         return d.keys().hasOnly(['nome', 'email', 'curso', 'criadoEm'])
                && d.nome is string && d.nome.size() > 0 && d.nome.size() <= 120
-               && d.email is string && d.email == request.auth.token.email
-               && d.curso is string && d.curso.size() <= 120
-               && d.criadoEm == request.time;
+               && d.email is string && d.email.size() <= 160
+               && d.email == request.auth.token.email
+               && d.curso is string && cursoAlunoValido(d.curso)
+               && d.criadoEm is timestamp;
       }
 
-      allow read, delete: if request.auth != null && request.auth.uid == uid;
-      allow create, update: if request.auth != null
-                            && request.auth.uid == uid
-                            && perfilValido(request.resource.data);
+      allow read, delete: if dono(uid);
+
+      allow create: if dono(uid)
+                    && perfilValido(request.resource.data)
+                    && request.resource.data.criadoEm == request.time;
+
+      allow update: if dono(uid)
+                    && perfilValido(request.resource.data)
+                    && request.resource.data.criadoEm == resource.data.criadoEm;
     }
 
-    // ---- Avaliações ----
-    // Leitura pública (aparecem na home). Escrita só do próprio autor,
-    // uma avaliação por aluno (id do documento = uid).
-    // Guarda apenas primeiro nome e curso — nunca e-mail ou telefone.
+    function esperaAvaliacao(gravacoes) {
+      return gravacoes <= 1 ? duration.value(60, 's')
+           : gravacoes == 2 ? duration.value(300, 's')
+           : gravacoes == 3 ? duration.value(1800, 's')
+           : gravacoes == 4 ? duration.value(7200, 's')
+           : duration.value(86400, 's');
+    }
+
+    // Avaliações: leitura pública, escrita somente pelo autor com e-mail
+    // verificado. O documento contém apenas primeiro nome, curso e avaliação.
     match /avaliacoes/{uid} {
       function avaliacaoValida(d) {
-        return d.keys().hasOnly(['uid', 'nome', 'curso', 'nota', 'comentario', 'criadoEm'])
+        return d.keys().hasOnly([
+                 'uid', 'nome', 'curso', 'nota', 'comentario',
+                 'criadoEm', 'atualizadoEm', 'edicoes'
+               ])
                && d.uid == uid
                && d.nome is string && d.nome.size() > 0 && d.nome.size() <= 60
-               && d.curso is string && d.curso.size() <= 120
+               && d.curso is string && cursoAlunoValido(d.curso)
                && d.nota is int && d.nota >= 1 && d.nota <= 5
                && d.comentario is string && d.comentario.size() <= 600
-               && d.criadoEm == request.time;
+               && d.edicoes is int && d.edicoes > 0
+               && d.criadoEm is timestamp
+               && d.atualizadoEm == request.time;
+      }
+
+      function avaliacoesFeitas() {
+        return resource.data.get('edicoes', 0);
+      }
+
+      function ultimaAvaliacao() {
+        return resource.data.get('atualizadoEm', resource.data.criadoEm);
       }
 
       allow read: if true;
-      allow create, update: if request.auth != null
-                            && request.auth.uid == uid
-                            && avaliacaoValida(request.resource.data);
-      allow delete: if request.auth != null && request.auth.uid == uid;
+
+      allow create: if dono(uid)
+                    && emailVerificado()
+                    && avaliacaoValida(request.resource.data)
+                    && request.resource.data.edicoes == 1
+                    && request.resource.data.criadoEm == request.time;
+
+      allow update: if dono(uid)
+                    && emailVerificado()
+                    && avaliacaoValida(request.resource.data)
+                    && request.resource.data.edicoes == avaliacoesFeitas() + 1
+                    && request.resource.data.criadoEm == resource.data.criadoEm
+                    && request.time >= ultimaAvaliacao() + esperaAvaliacao(avaliacoesFeitas());
+
+      // Exclusões pelo cliente permitiriam apagar e recriar o documento para
+      // zerar "edicoes" e contornar o cooldown. Remoções são administrativas.
+      allow delete: if false;
     }
 
-    // ---- Matrículas (formulário público) ----
-    // Qualquer visitante pode enviar, ninguém pode ler pelo site.
-    // Consulte os envios pelo console do Firebase.
-    // Atenção: escrita anônima é aberta por natureza. Mantenha o App Check
-    // em modo enforce para conter envio automatizado em massa.
-    match /matriculas/{docId} {
+    function cursoMatriculaValido(d) {
+      return (d.cursoId == 'kids' && d.curso == 'Kids & Teens')
+             || (d.cursoId == 'regular' && d.curso == 'Curso Regular')
+             || (d.cursoId == 'preparacao' && d.curso == 'Preparação TOEFL / IELTS')
+             || (d.cursoId == 'conversacao' && d.curso == 'Conversação')
+             || (d.cursoId == 'nao-sei' && d.curso == 'Ainda não sei');
+    }
+
+    function modalidadeMatriculaValida(d) {
+      return (d.modalidadeId == 'presencial' && d.modalidade == 'Presencial')
+             || (d.modalidadeId == 'online' && d.modalidade == 'Online')
+             || (d.modalidadeId == 'hibrido' && d.modalidade == 'Híbrido');
+    }
+
+    // Matrículas exigem conta com e-mail confirmado. O UID como ID do
+    // documento limita cada conta a uma criação e impede submissão em nome
+    // de outra pessoa sem depender do rate limit de interface.
+    match /matriculas/{uid} {
       function matriculaValida(d) {
-        return d.keys().hasOnly(['nome', 'email', 'telefone', 'curso', 'cursoId',
-                                 'modalidade', 'nivel', 'mensagem', 'status', 'criadoEm'])
+        return d.keys().hasOnly([
+                 'uid', 'nome', 'email', 'telefone', 'curso', 'cursoId',
+                 'modalidade', 'modalidadeId', 'nivel', 'mensagem',
+                 'status', 'criadoEm'
+               ])
+               && d.keys().hasAll([
+                 'uid', 'nome', 'email', 'telefone', 'curso', 'cursoId',
+                 'modalidade', 'modalidadeId', 'nivel', 'mensagem',
+                 'status', 'criadoEm'
+               ])
+               && d.uid is string && d.uid == uid
                && d.nome is string && d.nome.size() > 0 && d.nome.size() <= 120
                && d.email is string && d.email.size() <= 160
+               && d.email == request.auth.token.email
                && d.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
-               && d.telefone is string && d.telefone.size() <= 40
-               && d.curso is string && d.curso.size() <= 120
-               && d.cursoId is string && d.cursoId.size() <= 60
-               && d.modalidade is string && d.modalidade.size() <= 60
-               && d.nivel is string && d.nivel.size() <= 60
+               && d.telefone is string
+               && d.telefone.matches('^\\([0-9]{2}\\) [0-9]{4,5}-[0-9]{4}$')
+               && d.curso is string && d.cursoId is string
+               && cursoMatriculaValido(d)
+               && d.modalidade is string && d.modalidadeId is string
+               && modalidadeMatriculaValida(d)
+               && d.nivel is string
+               && d.nivel in ['', 'zero', 'basico', 'intermediario', 'avancado']
                && d.mensagem is string && d.mensagem.size() <= 1000
                && d.status == 'novo'
                && d.criadoEm == request.time;
       }
 
-      allow create: if matriculaValida(request.resource.data);
+      allow create: if dono(uid)
+                    && emailVerificado()
+                    && matriculaValida(request.resource.data);
       allow read, update, delete: if false;
     }
 
-    // Bloqueia qualquer outra coleção.
+    // Qualquer coleção não declarada acima permanece fechada.
     match /{document=**} {
       allow read, write: if false;
     }

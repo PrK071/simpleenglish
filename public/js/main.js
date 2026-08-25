@@ -1,13 +1,19 @@
-import { db, firebaseReady, firebaseReadyPromise, COLECAO_AVALIACOES, COLECAO_MATRICULAS } from "./firebase-config.js";
+import { auth, db, firebaseReady, firebaseReadyPromise, COLECAO_AVALIACOES, COLECAO_MATRICULAS } from "./firebase-config.js";
+import * as limite from "./ratelimit.js";
+import {
+  onAuthStateChanged,
+  reload
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 import {
   collection,
-  addDoc,
+  doc,
   getDocs,
   query,
   orderBy,
   limit,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+  serverTimestamp,
+  setDoc
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", function () {
   const navToggle = document.getElementById("navToggle");
@@ -105,6 +111,68 @@ document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("signupForm");
   if (!form) return;
 
+  // Contenção de repetição acidental no navegador. Não é autorização nem
+  // rate limit de segurança: as regras exigem UID e e-mail verificado, e o
+  // localStorage pode ser apagado pelo visitante.
+  const CHAVE_MATRICULA = "matricula";
+  const termosCheck = document.getElementById("termos");
+  const authNotice = document.getElementById("matriculaAuthNotice");
+  const authNoticeText = document.getElementById("matriculaAuthNoticeText");
+  const emailInput = document.getElementById("email");
+  const btnEnvio = document.getElementById("submitBtn");
+  let cancelarContagem = null;
+  let usuarioMatricula = null;
+  let autenticacaoResolvida = false;
+
+  function atualizarEstadoMatricula(user) {
+    usuarioMatricula = user;
+    autenticacaoResolvida = true;
+    const verificado = Boolean(user && user.emailVerified);
+
+    if (user && user.email) {
+      emailInput.value = user.email;
+      emailInput.readOnly = true;
+    } else {
+      emailInput.readOnly = false;
+    }
+
+    authNotice.hidden = verificado;
+    if (!user) {
+      authNoticeText.textContent = "Entre na Área do Aluno e confirme seu e-mail antes de enviar a matrícula.";
+    } else if (!user.emailVerified) {
+      authNoticeText.textContent = "Confirme o e-mail da sua conta na Área do Aluno antes de enviar a matrícula.";
+    }
+
+    btnEnvio.disabled = !verificado || limite.verificar(CHAVE_MATRICULA).bloqueado;
+  }
+
+  function mostrarBloqueio() {
+    if (cancelarContagem) cancelarContagem();
+    btnEnvio.disabled = true;
+    cancelarContagem = limite.contagem(
+      CHAVE_MATRICULA,
+      function (mensagem) {
+        setError(termosCheck, mensagem);
+      },
+      function () {
+        btnEnvio.disabled = !(usuarioMatricula && usuarioMatricula.emailVerified);
+      }
+    );
+  }
+
+  if (limite.verificar(CHAVE_MATRICULA).bloqueado) mostrarBloqueio();
+
+  firebaseReadyPromise.then(function () {
+    if (!firebaseReady) {
+      autenticacaoResolvida = true;
+      authNotice.hidden = false;
+      authNoticeText.textContent = "Matrícula indisponível neste momento. Recarregue a página e tente novamente.";
+      btnEnvio.disabled = true;
+      return;
+    }
+    onAuthStateChanged(auth, atualizarEstadoMatricula);
+  });
+
   const phoneInput = document.getElementById("telefone");
   phoneInput.addEventListener("input", function () {
     let value = phoneInput.value.replace(/\D/g, "").slice(0, 11);
@@ -122,7 +190,6 @@ document.addEventListener("DOMContentLoaded", function () {
     setError(phoneInput, "");
   });
 
-  const emailInput = document.getElementById("email");
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   function setError(input, message) {
@@ -138,8 +205,29 @@ document.addEventListener("DOMContentLoaded", function () {
     return input.value.trim() !== "";
   }
 
-  form.addEventListener("submit", function (event) {
+  form.addEventListener("submit", async function (event) {
     event.preventDefault();
+
+    if (!autenticacaoResolvida || !usuarioMatricula) {
+      authNotice.hidden = false;
+      authNoticeText.textContent = "Entre na Área do Aluno e confirme seu e-mail antes de enviar a matrícula.";
+      return;
+    }
+
+    try {
+      await reload(usuarioMatricula);
+      await usuarioMatricula.getIdToken(true);
+    } catch (error) {
+      console.error("[Simple English] Erro ao atualizar a autenticação:", error);
+      setError(termosCheck, "Não foi possível confirmar sua conta agora. Tente novamente.");
+      return;
+    }
+
+    if (!usuarioMatricula.emailVerified || !usuarioMatricula.email) {
+      atualizarEstadoMatricula(usuarioMatricula);
+      return;
+    }
+
     let valid = true;
 
     ["nome", "email", "telefone", "curso", "modalidade"].forEach(function (id) {
@@ -178,16 +266,17 @@ document.addEventListener("DOMContentLoaded", function () {
     const modalidadeSelect = document.getElementById("modalidade");
 
     const matricula = {
+      uid: usuarioMatricula.uid,
       nome: document.getElementById("nome").value.trim(),
-      email: emailInput.value.trim(),
+      email: usuarioMatricula.email,
       telefone: phoneInput.value.trim(),
       curso: cursoSelect.options[cursoSelect.selectedIndex].text,
       cursoId: cursoSelect.value,
       modalidade: modalidadeSelect.options[modalidadeSelect.selectedIndex].text,
+      modalidadeId: modalidadeSelect.value,
       nivel: nivelSelecionado ? nivelSelecionado.value : "",
       mensagem: document.getElementById("mensagem").value.trim(),
-      status: "novo",
-      criadoEm: serverTimestamp()
+      status: "novo"
     };
 
     function mostrarSucesso() {
@@ -199,21 +288,35 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     if (!firebaseReady) {
-      setError(termos, "Envio indisponível: o Firebase ainda não foi configurado em js/firebase-config.js.");
+      setError(termos, "Envio indisponível neste momento. Recarregue a página e tente novamente.");
+      return;
+    }
+
+    const situacao = limite.verificar(CHAVE_MATRICULA);
+    if (situacao.bloqueado) {
+      mostrarBloqueio();
       return;
     }
 
     btn.disabled = true;
     btn.textContent = "Enviando...";
 
-    addDoc(collection(db, COLECAO_MATRICULAS), matricula)
-      .then(mostrarSucesso)
+    // O UID como ID, combinado com create-only nas regras, limita a uma
+    // matrícula por conta verificada e impede submissão em nome de outro UID.
+    setDoc(
+      doc(db, COLECAO_MATRICULAS, usuarioMatricula.uid),
+      Object.assign({}, matricula, { criadoEm: serverTimestamp() })
+    )
+      .then(function () {
+        limite.bloquear(CHAVE_MATRICULA);
+        mostrarSucesso();
+      })
       .catch(function (error) {
         console.error("[Simple English] Erro ao enviar matrícula:", error);
         setError(
           termos,
           error && error.code === "permission-denied"
-            ? "O banco de dados recusou o envio. Publique as regras do Firestore (firestore.rules) no console do Firebase."
+            ? "Esta conta já possui uma matrícula ou ainda não está autorizada. Confirme seu e-mail na Área do Aluno."
             : "Não foi possível enviar sua matrícula. Verifique sua conexão e tente novamente."
         );
         btn.disabled = false;
